@@ -11,12 +11,6 @@ namespace HelloApp
 {
     public class Startup
     {
-        //Создаем конструктор 
-        IHostingEnvironment _env;
-        public Startup(IHostingEnvironment env)
-        {
-            _env = env;
-        }
         // Необязательный метод ConfigureServices() регистрирует сервисы, которые используются приложением
         public void ConfigureServices(IServiceCollection services)
         {
@@ -26,12 +20,46 @@ namespace HelloApp
         // Объект IApplicationBuilder является обязательным параметром для метода Configure
         public void Configure(IApplicationBuilder app)
         {
+
+            app.UseToken("12345");
+
+            app.Map("/index", Index);
+            app.Map("/about", About);
+
+            int x = 2;
+            app.Use(async (context, next) =>
+            {
+                x = x * 2;      // 2 * 2 = 4
+                await next.Invoke();    // вызов app.Run
+                x = x * 2;      // 8 * 2 = 16
+                await context.Response.WriteAsync($"Result: {x}");
+            });
+
+            app.Run(async (context) =>
+            {
+                x = x * 2;  //  4 * 2 = 8
+                await Task.FromResult(0);
+            });
+        }
+
+        // Объект IApplicationBuilder является обязательным параметром для метода Configure
+        private static void Index(IApplicationBuilder app)
+        {
+            app.Run(async context =>
+            {
+                await context.Response.WriteAsync("Index");
+            });
+        }
+        // Объект IApplicationBuilder является обязательным параметром для метода Configure
+        private static void About(IApplicationBuilder app)
+        {
             // Обработка запроса - получаем констекст запроса в виде объекта context
             app.Run(async (context) =>
             {
-                // В браузер будет выводиться название приложения, которое хранится в свойстве _env.ApplicationName
-                await context.Response.WriteAsync(_env.ApplicationName);
+                await context.Response.WriteAsync("About");
             });
         }
-    }
+            
+        }
+
 }
